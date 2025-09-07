@@ -1,0 +1,175 @@
+Modern Application Development I
+Project Statement
+Vehicle Parking App - V1
+It is a multi-user app (one requires an administrator and other users) that manages different parking lots, parking spots and parked vehicles. Assume that this parking app is for 4-wheeler parking.
+
+Frameworks to be used
+These are the mandatory frameworks on which the project has to be built.
+
+
+Flask for application back-end
+Jinja2 templating, HTML, CSS and Bootstraps for application front-end
+SQLite for database (No other database is permitted)
+Note: 
+
+All demos should be possible on your local machine.
+The database must be created programmatically (via table creation or model code). Manual database creation, such as using DB Browser for SQLite, is NOT allowed.
+Roles
+The platform will have two roles:
+
+
+Admin - root access - It is the superuser of the app and requires no registration
+
+Admin is also known as the superuser
+Admin can create a new parking lot
+Each parking lot can have any number of parking spots for 4-wheeler parking
+Each parking lot can have a different price
+Admin can view the status of all available parking spots on his/her dashboard
+Admin can edit/delete any number of parking lots, i.e., admin can increase or decrease the number of parking spots inside the lot.
+
+User - Can reserve a parking space
+Register/Login
+Choose an available parking lot
+Book the spot (automatically allotted by the app after booking)
+Release or vacate the spot
+Terminologies
+
+User: The user will register/login and reserve any parking spot.
+
+
+Admin: The superuser with full control over other users and data. No
+
+registration is required, i.e. the admin should exist whenever the database is
+
+created.
+
+
+Parking lot: It’s the physical space where the collection of parking spots are available for an area. The parking lot may contain the following attributes.
+
+
+id - primary key
+prime_location_name
+Price
+Address
+Pin code
+maximum_number_of_spots
+etc: Additional fields (if any)
+
+Parking spot: The physical space for parking a 4-wheeler parking. The parking spot may contain the following attributes.
+
+
+id - primary key
+lot_id (foreign key-parking lot)
+status(O-occupied/A-available)
+etc: Additional fields (if any)
+
+Reserve parking spot: Allocates parking spot as per the user requests.
+
+This may contain the following attributes.
+
+
+id - primary key
+spot_id (foreign key-parking spot)
+user_id(foreign key-users)
+Parking_timestamp
+Leaving_timestamp
+parking_cost / unit time
+etc: Additional fields (if any)
+Note: The above tables and fields are not exhaustive, students can add more tables and fields as per their requirements
+
+Similar apps
+https://www.secureparking.co.in/
+
+
+Application Wireframe
+Vehicle Parking App 
+
+ 
+
+
+Note:
+The provided wireframe is intended only to illustrate the application's flow and demonstrate what should appear when a user navigates between pages.
+
+Replication of the exact views is NOT mandatory.
+Students are encouraged to work on their front-end ideas and designs while maintaining the application's intended functionality and flow.
+
+Core Functionalities
+Admin login and User login
+
+A login/register form with fields like username, password etc. for the user and a login form for the admin
+You can either use a proper login framework or just use a simple HTML form with username and password (we are not concerned with how secure the login or the app is)
+The app must have a suitable model to store and differentiate all types of users
+Admin Dashboard - for the Admin
+
+The admin should be added, whenever a new database is created.
+The admin creates/edits/deletes a parking lot. Note: Delete only if all spots in the parking lot are empty.
+The admin can’t add each parking spot individually. The number of parking spots will be created based on the maximum number of parking spots in a lot.
+The admin can view the status of parking spot and check the parked vehicle details If the parking spot status is occupied.
+The admin can view all registered users.
+The admin can view the summary charts of parking lots/spots.
+
+User dashboard - for the User
+
+The user can choose an available parking lot and allocation is done as per the first available parking spot. Note: The user can’t select a parking spot.
+The user changes the status of the parking spot to occupied, once the vehicle is parked.
+The user changes the parking spot status to released, once the vehicle is moved out of the parking.
+The timestamp is recorded between parking in and parking out.
+Shows the summary charts on his/her parking.
+Recommended and/or Optional functionalities
+Ability for an admin to search for a particular parking spot and whether it is vacant or occupied.
+API resources are created to interact with the parkings spots, lots and/or users. (Please note: you can choose which API resources to make from the given ones, It is NOT mandatory to create API resources for CRUD of all the components)
+APIs can either be created by returning JSON from a controller or using a flask extension like flask_restful
+External APIs/libraries for creating charts, e.g. Chart JS
+Implementing frontend validation on all the form fields using HTML5 form validation or JavaScript
+Implement backend validation within your app's controllers.
+Provide styling and aesthetics to your application by creating a beautiful and responsive front end using simple CSS or Bootstrap
+Incorporate a proper login system to prevent unauthorized access to the app using Flask extensions like flask_login, flask_security etc.
+Any additional feature you feel is appropriate for the application
+Evaluation
+Students have to create and submit a project report (not more than 5 pages) on the portal, along with the actual project submission
+The report must include the following things;
+Student details
+Project details, including the question statement and how you approached the problem statement
+Frameworks and libraries used
+ER diagram of your database, including all the tables and their relations
+API resource endpoints (if any)
+Drive link of the presentation video
+If a student has used any form of AI/LLM for the project, you will need to mention the extent of use in your report ( click here for the doc)
+
+Click here for project report demo 
+
+
+Possible folder structure:
+
+
+
+
+
+All code is to be submitted on the portal in a single zip file (zipping instructions are given in the project document - Project Doc T22025
+
+Video Presentation Guidelines (Advised):
+1. A short Intro (not more than 30 sec)
+
+2. How did you approach the problem statement? (30 sec)
+
+3. Highlight key features of the application (90 sec)
+
+4. Any Additional feature(s) implemented other than core requirements (30 sec)
+
+Note:
+
+1. The final video must not exceed 5-10 minutes.
+
+2. Keeping your video feed on during recording (like in a screencast) is optional but recommended.
+
+
+The video must be uploaded on the student drive with access to anyone with the link and the link must be included in the report:
+This will be viewed during or before the viva, so it should be a clear explanation of your work.
+Viva: after the video explanation, you are required to give a demo of your work, and answer any questions that the examiner asks:
+This includes making changes as requested and running the code for a live demo.
+Other questions may be unrelated to the project itself but are relevant to the course.
+Instructions
+This is a live document and will be updated with more details (wireframe)
+We will freeze the problem statement on or before 20/04/2025, beyond which any modifications to the statement will be communicated via proper announcements.
+The project has to be submitted as a single zip file.
+

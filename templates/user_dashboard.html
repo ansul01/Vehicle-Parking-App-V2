@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Parking Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_dashboard.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <i class="fas fa-car me-2"></i>
+                Parking Management System
+            </span>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-2"></i>{{ user.username }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('user_profile') }}">
+                            <i class="fas fa-user-edit me-2"></i>Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('user_wallet') }}">
+                            <i class="fas fa-wallet me-2"></i>Wallet
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+                <span class="badge bg-success fs-6">
+                    <i class="fas fa-wallet me-1"></i>₹{{ "%.2f"|format(user.balance) }}
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <h3>{{ active_reservations|length }}</h3>
+                    <p><i class="fas fa-car me-2"></i>Active Bookings</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <h3>{{ past_reservations|length }}</h3>
+                    <p><i class="fas fa-history me-2"></i>Total Bookings</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <h3>₹{{ "%.0f"|format(total_spent or 0) }}</h3>
+                    <p><i class="fas fa-money-bill-wave me-2"></i>Total Spent</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card text-center">
+                    <h3>{{ "%.1f"|format(total_hours or 0) }}h</h3>
+                    <p><i class="fas fa-clock me-2"></i>Total Hours</p>
+                </div>
+            </div>
+        </div>
+
+        <h2 class="section-title">
+            <i class="fas fa-map-marker-alt me-2"></i>Available Parking Lots
+        </h2>
+
+        {% for lot in lots %}
+        <div class="lot-card">
+            <div class="lot-header">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h4 class="mb-2">
+                            <i class="fas fa-building me-2"></i>{{ lot.prime_location_name }}
+                        </h4>
+                        <p class="mb-1">
+                            <i class="fas fa-map-pin me-2"></i>{{ lot.address }}, PIN: {{ lot.pin_code }}
+                        </p>
+                        <div class="mt-2">
+                            {% if lot.has_security %}
+                                <span class="feature-icon" title="Security Available">
+                                    <i class="fas fa-shield-alt"></i>
+                                </span>
+                            {% endif %}
+                            {% if lot.has_lighting %}
+                                <span class="feature-icon" title="Well Lit">
+                                    <i class="fas fa-lightbulb"></i>
+                                </span>
+                            {% endif %}
+                            {% if lot.is_covered %}
+                                <span class="feature-icon" title="Covered Parking">
+                                    <i class="fas fa-umbrella"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="badge badge-available mb-2">
+                            {{ lot.available_spots_count() }}/{{ lot.max_spots }} Available
+                        </div>
+                        <div class="h5 mb-0">₹{{ "%.0f"|format(lot.price_per_hour) }}/hour</div>
+                    </div>
+                </div>
+                
+                <div class="progress-custom mt-3">
+                    <div class="progress-bar-custom" style="width: {{ lot.occupancy_rate()|round }}%"></div>
+                </div>
+                <small class="text-light">Occupancy: {{ "%.0f"|format(lot.occupancy_rate()) }}%</small>
+            </div>
+            
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="mb-3">Parking Layout Preview:</h6>
+                        <div class="spot-preview">
+                            {% set max_preview = 12 %}
+                            {% set spot_count = lot.parking_spots|length %}
+                            {% set preview_limit = max_preview if spot_count > max_preview else spot_count %}
+                            {% set preview_spots = lot.parking_spots[:preview_limit] %}
+                            {% for spot in preview_spots %}
+                                <div class="spot-mini {{ 'available' if spot.status == 'A' else 'occupied' }}" 
+                                        title="Spot {{ spot.spot_number }} - {{ 'Available' if spot.status == 'A' else 'Occupied' }}">
+                                    {{ spot.spot_number }}
+                                </div>
+                            {% endfor %}
+                            {% if lot.parking_spots|length > 12 %}
+                                <div class="spot-mini" style="background: #6c757d; color: white;">
+                                    +{{ lot.parking_spots|length - 12 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between text-muted">
+                            <small>
+                                <i class="fas fa-car me-1"></i>
+                                Max: {{ lot.max_parking_limit }} spots
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 text-center">
+                        <form action="{{ url_for('book_spot', lot_id=lot.id) }}" method="POST" class="booking-form">
+                            <button type="submit" 
+                                    class="btn btn-book w-100 {{ 'disabled' if lot.available_spots_count() == 0 or active_reservations|length > 0 }}" 
+                                    {% if lot.available_spots_count() == 0 or active_reservations|length > 0 %}disabled{% endif %}>
+                                <i class="fas fa-parking me-2"></i>
+                                {% if active_reservations|length > 0 %}
+                                    Already Have Booking
+                                {% elif lot.available_spots_count() > 0 %}
+                                    Book Now
+                                {% else %}
+                                    Fully Booked
+                                {% endif %}
+                            </button>
+                            <div class="loading-spinner mt-2">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                                <span class="ms-2">Booking...</span>
+                            </div>
+                        </form>
+                        
+                        {% if lot.available_spots_count() == 0 %}
+                            <small class="text-muted mt-2 d-block">
+                                <i class="fas fa-bell me-1"></i>Get notified when available
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not lots %}
+        <div class="text-center py-5">
+            <i class="fas fa-car-crash text-muted" style="font-size: 4rem;"></i>
+            <h4 class="text-muted mt-3">No Parking Lots Available</h4>
+            <p class="text-muted">Please check back later for available parking spots.</p>
+        </div>
+        {% endif %}
+
+        {% if active_reservations %}
+        <h2 class="section-title mt-5">
+            <i class="fas fa-clock me-2"></i>Your Active Reservations
+        </h2>
+
+        <div class="row">
+            {% for reservation in active_reservations %}
+            <div class="col-md-6 mb-4">
+                <div class="reservation-card reservation-active">
+                    <div class="card-header bg-success text-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                Spot {{ reservation.spot.spot_number }}
+                            </span>
+                            <span class="status-badge badge-active">
+                                <i class="fas fa-circle me-1"></i>ACTIVE
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title">{{ reservation.spot.lot.prime_location_name }}</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2">
+                                    <i class="fas fa-map-pin me-2 text-muted"></i>
+                                    {{ reservation.spot.lot.address }}
+                                </p>
+                                <p class="mb-2">
+                                    <i class="fas fa-play me-2 text-muted"></i>
+                                    Started: {{ reservation.start_time.strftime('%H:%M, %d %b') }}
+                                </p>
+                                <p class="mb-2">
+                                    <i class="fas fa-money-bill-wave me-2 text-muted"></i>
+                                    ₹{{ "%.0f"|format(reservation.spot.lot.price_per_hour) }}/hour
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="text-center">
+                                    <div class="h4 text-primary mb-1" id="duration-{{ reservation.id }}">
+                                        {{ "%.1f"|format(reservation.duration_hours()) }}h
+                                    </div>
+                                    <small class="text-muted">Duration</small>
+                                    <div class="mt-2">
+                                        <div class="h6 text-success mb-0" id="cost-{{ reservation.id }}">
+                                            ₹{{ "%.2f"|format(reservation.duration_hours() * reservation.spot.lot.price_per_hour) }}
+                                        </div>
+                                        <small class="text-muted">Current Cost</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <form action="{{ url_for('release_spot', reservation_id=reservation.id) }}" method="POST" class="release-form">
+                                <button type="submit" class="btn btn-release">
+                                    <i class="fas fa-sign-out-alt me-2"></i>
+                                    Release Spot
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if past_reservations %}
+        <h2 class="section-title mt-5">
+            <i class="fas fa-history me-2"></i>Recent Parking History
+        </h2>
+
+        <div class="table-responsive">
+            <table class="table table-modern">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-map-marker-alt me-2"></i>Location</th>
+                        <th><i class="fas fa-parking me-2"></i>Spot</th>
+                        <th><i class="fas fa-calendar me-2"></i>Date</th>
+                        <th><i class="fas fa-clock me-2"></i>Duration</th>
+                        <th><i class="fas fa-money-bill-wave me-2"></i>Cost</th>
+                        <th><i class="fas fa-info-circle me-2"></i>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reservation in past_reservations %}
+                    <tr>
+                        <td>
+                            <strong>{{ reservation.spot.lot.prime_location_name }}</strong><br>
+                            <small class="text-muted">{{ reservation.spot.lot.address }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ reservation.spot.spot_number }}</span>
+                        </td>
+                        <td>
+                            {{ reservation.start_time.strftime('%d %b %Y') }}<br>
+                            <small class="text-muted">{{ reservation.start_time.strftime('%H:%M') }} - {{ reservation.end_time.strftime('%H:%M') }}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ "%.1f"|format(reservation.duration_hours()) }}h</span>
+                        </td>
+                        <td>
+                            <strong class="text-success">₹{{ "%.2f"|format(reservation.cost) }}</strong>
+                        </td>
+                        <td>
+                            <span class="badge bg-success">
+                                <i class="fas fa-check me-1"></i>Completed
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info mt-4">
+            <i class="fas fa-info-circle me-2"></i>
+            You haven't made any parking reservations yet. Book your first spot above!
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="quick-actions">
+        <div class="d-flex flex-column">
+            <button class="fab" onclick="location.href='{{ url_for('user_wallet') }}'" title="Wallet">
+                <i class="fas fa-wallet"></i>
+            </button>
+            <button class="fab" onclick="location.href='{{ url_for('user_profile') }}'" title="Profile">
+                <i class="fas fa-user"></i>
+            </button>
+            <button class="fab" onclick="refreshPage()" title="Refresh">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Real-time duration and cost updates for active reservations
+        function updateActiveParkingInfo() {
+            {% for reservation in active_reservations %}
+            const startTime = new Date('{{ reservation.start_time.isoformat() }}');
+            const now = new Date();
+            const durationHours = (now - startTime) / (1000 * 60 * 60);
+            const cost = durationHours * {{ reservation.spot.lot.price_per_hour }};
+            
+            document.getElementById('duration-{{ reservation.id }}').textContent = durationHours.toFixed(1) + 'h';
+            document.getElementById('cost-{{ reservation.id }}').textContent = '₹' + cost.toFixed(2);
+            {% endfor %}
+        }
+
+        // Update every 30 seconds
+        setInterval(updateActiveParkingInfo, 30000);
+
+        // Form submission loading states
+        document.querySelectorAll('.booking-form').forEach(form => {
+            form.addEventListener('submit', function() {
+                const button = this.querySelector('button');
+                const spinner = this.querySelector('.loading-spinner');
+                button.style.display = 'none';
+                spinner.style.display = 'block';
+            });
+        });
+
+        document.querySelectorAll('.release-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                if (!confirm('Are you sure you want to release this parking spot?')) {
+                    e.preventDefault();
+                    return;
+                }
+                const button = this.querySelector('button');
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Releasing...';
+                button.disabled = true;
+            });
+        });
+
+        // Refresh page function
+        function refreshPage() {
+            const refreshBtn = document.querySelector('.quick-actions .fab:last-child i');
+            refreshBtn.classList.add('fa-spin');
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+        }
+
+        // Auto-refresh every 2 minutes
+        setInterval(() => {
+            if (!document.querySelector('.modal.show')) { // Only refresh if no modal is open
+                location.reload();
+            }
+        }, 120000);
+    </script>
+</body>
+</html>

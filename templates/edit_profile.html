@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - Parking Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('user_profile') }}">
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Profile
+            </a>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-2"></i>{{ user.username }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('user_profile') }}">
+                            <i class="fas fa-user-edit me-2"></i>Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('user_wallet') }}">
+                            <i class="fas fa-wallet me-2"></i>Wallet
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+                {% if user.balance is defined %}
+                <span class="badge bg-success fs-6">
+                    <i class="fas fa-wallet me-1"></i>₹{{ "%.2f"|format(user.balance) }}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-card">
+            <h2 class="section-title mb-4">
+                <i class="fas fa-user-edit me-2"></i>Edit Profile
+            </h2>
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email address</label>
+                    <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="full_name" class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="full_name" name="full_name" value="{{ user.full_name or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label for="vehicle_number" class="form-label">Vehicle Number</label>
+                    <input type="text" class="form-control" id="vehicle_number" name="vehicle_number" value="{{ user.vehicle_number or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label for="vehicle_type" class="form-label">Vehicle Type</label>
+                    <select class="form-control" id="vehicle_type" name="vehicle_type">
+                        <option value="car" {% if user.vehicle_type == 'car' %}selected{% endif %}>Car</option>
+                        <option value="motorcycle" {% if user.vehicle_type == 'motorcycle' %}selected{% endif %}>Motorcycle</option>
+                        <option value="van" {% if user.vehicle_type == 'van' %}selected{% endif %}>Van</option>
+                        <option value="truck" {% if user.vehicle_type == 'truck' %}selected{% endif %}>Truck</option>
+                        <option value="other" {% if user.vehicle_type == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary-custom w-100">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

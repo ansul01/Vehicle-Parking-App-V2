@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallet - Parking Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/user_wallet.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('user_dashboard') }}">
+                <i class="fas fa-arrow-left me-2"></i>
+                Back to Dashboard
+            </a>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-2"></i>{{ user.username }}
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url_for('user_profile') }}">
+                            <i class="fas fa-user-edit me-2"></i>Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('user_wallet') }}">
+                            <i class="fas fa-wallet me-2"></i>Wallet
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+                <span class="badge bg-success fs-6">
+                    <i class="fas fa-wallet me-1"></i>₹{{ "%.2f"|format(user.balance) }}
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="wallet-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-0">
+                        <i class="fas fa-wallet me-3"></i>My Wallet
+                    </h2>
+                    <p class="mb-2 opacity-75">Available Balance</p>
+                    <div class="balance-amount">₹{{ "%.2f"|format(user.balance) }}</div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="wallet-icon">
+                        <i class="fas fa-credit-card" style="font-size: 4rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card spent">
+                <div class="stat-value text-danger">₹{{ "%.0f"|format(total_spent) }}</div>
+                <div class="stat-label">Total Spent</div>
+            </div>
+            <div class="stat-card added">
+                <div class="stat-value text-success">₹{{ "%.0f"|format(total_added) }}</div>
+                <div class="stat-label">Total Added</div>
+            </div>
+            <div class="stat-card transactions">
+                <div class="stat-value text-primary">{{ transactions|length }}</div>
+                <div class="stat-label">Transactions</div>
+            </div>
+        </div>
+
+        <div class="wallet-actions">
+            <button class="action-card add-money" data-bs-toggle="modal" data-bs-target="#addMoneyModal">
+                <div class="action-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <h5>Add Money</h5>
+                <p class="text-muted mb-0">Add funds to your wallet</p>
+            </button>
+            
+            <button class="action-card withdraw-money" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                <div class="action-icon">
+                    <i class="fas fa-minus"></i>
+                </div>
+                <h5>Withdraw</h5>
+                <p class="text-muted mb-0">Withdraw money to bank</p>
+            </button>
+            
+            <button class="action-card payment-methods" data-bs-toggle="modal" data-bs-target="#paymentMethodsModal">
+                <div class="action-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <h5>Payment Methods</h5>
+                <p class="text-muted mb-0">Manage payment options</p>
+            </button>
+        </div>
+
+        <h2 class="section-title">
+            <i class="fas fa-history me-2"></i>Recent Transactions
+        </h2>
+
+        {% if transactions %}
+            {% for transaction in transactions %}
+            <div class="transaction-card">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <div class="text-center">
+                            {% if transaction.type == 'credit' %}
+                            <i class="fas fa-plus text-success" style="font-size: 1.5rem;"></i>
+                            {% else %}
+                            <i class="fas fa-minus text-danger" style="font-size: 1.5rem;"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-1">{{ transaction.description }}</h6>
+                        <small class="text-muted">
+                            <i class="fas fa-calendar me-1"></i>
+                            {{ transaction.created_at.strftime('%d %b %Y, %H:%M') }}
+                        </small>
+                        {% if transaction.reference_id %}
+                        <br><small class="text-muted">Ref: {{ transaction.reference_id }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-2 text-center">
+                        <span class="transaction-type {% if transaction.type == 'credit' %}type-credit{% else %}type-debit{% endif %}">
+                            {{ transaction.type.capitalize() }}
+                        </span>
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <div class="{% if transaction.type == 'credit' %}amount-credit{% else %}amount-debit{% endif %}">
+                            {% if transaction.type == 'credit' %}+{% else %}-{% endif %}₹{{ "%.2f"|format(transaction.amount) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="alert alert-info text-center mt-4">
+            <i class="fas fa-info-circle me-2"></i>
+            No transactions found.
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="modal fade" id="addMoneyModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>Add Money to Wallet
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('add_money') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount to Add</label>
+                            <input type="number" class="form-control" name="amount" id="amount" 
+                                    min="10" max="10000" step="0.01" required>
+                            <div class="form-text">Minimum: ₹10, Maximum: ₹10,000</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Quick Amount</label>
+                            <div>
+                                <button type="button" class="quick-amount-btn" onclick="setAmount(100)">₹100</button>
+                                <button type="button" class="quick-amount-btn" onclick="setAmount(250)">₹250</button>
+                                <button type="button" class="quick-amount-btn" onclick="setAmount(500)">₹500</button>
+                                <button type="button" class="quick-amount-btn" onclick="setAmount(1000)">₹1000</button>
+                                <button type="button" class="quick-amount-btn" onclick="setAmount(2000)">₹2000</button>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="payment_method" class="form-label">Payment Method</label>
+                            <select class="form-control" name="payment_method" id="payment_method" required>
+                                <option value="">Select Payment Method</option>
+                                <option value="upi">UPI</option>
+                                <option value="card">Credit/Debit Card</option>
+                                <option value="netbanking">Net Banking</option>
+                                <option value="wallet">Digital Wallet</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Add Money
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="withdrawModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-minus me-2"></i>Withdraw Money
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ url_for('withdraw_money') }}" method="POST">
+                    <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Available Balance: ₹{{ "%.2f"|format(user.balance) }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="withdraw_amount" class="form-label">Amount to Withdraw</label>
+                            <input type="number" class="form-control" name="amount" id="withdraw_amount" 
+                                    min="50" max="{{ user.balance | float }}" step="0.01" required>
+                            <div class="form-text">Minimum: ₹50</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="bank_account" class="form-label">Bank Account</label>
+                            <select class="form-control" name="bank_account" id="bank_account" required>
+                                <option value="">Select Bank Account</option>
+                                <option value="primary">Primary Account (****1234)</option>
+                                <option value="savings">Savings Account (****5678)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-minus me-2"></i>Withdraw
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="paymentMethodsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-credit-card me-2"></i>Payment Methods
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Manage your saved payment methods for quick transactions.
+                    </div>
+                    
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-credit-card me-2 text-primary"></i>
+                                    <strong>**** **** **** 1234</strong>
+                                    <br><small class="text-muted">Visa Card</small>
+                                </div>
+                                <span class="badge bg-success">Primary</span>
+                            </div>
+                        </div>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-mobile-alt me-2 text-success"></i>
+                                    <strong>UPI ID: user@paytm</strong>
+                                    <br><small class="text-muted">UPI Payment</small>
+                                </div>
+                                <button class="btn btn-outline-danger btn-sm">Remove</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <button class="btn btn-primary w-100">
+                        <i class="fas fa-plus me-2"></i>Add New Payment Method
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function setAmount(amount) {
+            document.getElementById('amount').value = amount;
+            
+            // Update active button
+            document.querySelectorAll('.quick-amount-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // Add 'active' class to the clicked button
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

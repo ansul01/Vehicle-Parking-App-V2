@@ -1,0 +1,100 @@
+/* --- Authentication Forms Styling --- */
+.auth-container {
+    background-color: #fff;
+    padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    max-width: 450px; /* Adjust width as needed */
+    margin: 50px auto; /* Center the form on the page */
+    text-align: center;
+}
+
+.auth-container h2 {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-size: 2em;
+}
+
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Space between form groups */
+}
+
+.form-group {
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"],
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box; /* Include padding in width */
+    font-size: 1em;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #3498db; /* Highlight on focus */
+    outline: none;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.5);
+}
+
+.form-group.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.form-group.remember-me input[type="checkbox"] {
+    width: auto; /* Reset width for checkbox */
+    margin-right: 5px;
+}
+
+.auth-container .btn-primary {
+    width: 100%;
+    padding: 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 15px;
+}
+
+.auth-container .btn-primary:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.auth-container p {
+    margin-top: 20px;
+    font-size: 0.95em;
+    color: #666;
+}
+
+.auth-container p a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.auth-container p a:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,4 @@
+echo ".vscode/" >> .gitignore
+echo ".codeium/" >> .gitignore
+echo "instance/" >> .gitignore
+echo "*.pyc" >> .gitignore

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title if title else 'Parking App' }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"> {# Added Font Awesome for icons #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}"> {# Link to your base.css #}
+    {% block extra_css %}{% endblock %} {# This block allows child templates to add more CSS #}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('home') }}">Parking App</a> {# Changed # to home #}
+            <div class="d-flex">
+                {% if current_user.is_authenticated %} {# Use current_user from Flask-Login #}
+                    <span class="navbar-text text-light me-3">Hello, {{ current_user.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-light me-2">Login</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-light">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
